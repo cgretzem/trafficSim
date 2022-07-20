@@ -24,7 +24,7 @@ pub struct Intersection
 {
     id : u8,
     lights: [TrafficLight; 4],
-    light_queues : [Vec<Car>;4]
+    pub light_queues : [Vec<u8>;4]
 }
 
 impl Eq for Intersection {}
@@ -49,18 +49,5 @@ impl Hash for Intersection
 
 impl Intersection
 {
-    fn publish(&mut self)//calls notify on all cars so that they may take action
-    {
-       for i in 0..self.lights.len()
-       {
-            self.light_queues[i].retain_mut(|car| {
-            match car.notify(i+2,&self.lights){
-                None => true,
-                Some(_dir) => false
-            }
-        })
-       }
-            
-        
-    }
+    
 }

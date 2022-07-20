@@ -64,7 +64,8 @@ impl Simulator
 
     }
 
-    fn play_timestep(&mut self)
+
+    fn tick_cars(&mut self)
     {
         self.cars.iter_mut().for_each(|car|{
             let car_pos = self.car_positions.get_mut(&car.id).unwrap();
@@ -76,14 +77,25 @@ impl Simulator
                 }
             }
             else {
-                let in_between = car_pos.in_between.unwrap();
+                let mut in_between = car_pos.in_between.unwrap();
                 if in_between.2 == self.road.get_distance(in_between.1, in_between.2).unwrap() -1
                 {
                     car_pos.current_intersection = Some((in_between.1, in_between.3));
+                    self.intersections.get_mut(usize::from(in_between.1)).unwrap().light_queues[usize::from(in_between.3)].push(car.id); // subscribing car to light
+                    
                     car_pos.in_between = None;
+                }
+                else {
+                    in_between.2 += 1;
+                    car_pos.in_between = Some(in_between);
                 }
             }
         })
+    }
+
+    fn play_timestep(&mut self)
+    {
+       self.tick_cars();
     }
 
 
