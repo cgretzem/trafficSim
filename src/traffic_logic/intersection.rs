@@ -4,7 +4,7 @@ use std::hash::Hash;
 
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum LightStatus
 {
     Green,
@@ -13,7 +13,7 @@ pub enum LightStatus
 }
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct TrafficLight
 {   
     pub main_status : LightStatus,
@@ -22,8 +22,8 @@ pub struct TrafficLight
 
 pub struct Intersection
 {
-    id : u8,
-    lights: [TrafficLight; 4],
+    pub id : u8,
+    pub lights: [TrafficLight; 4],
     pub light_queues : [Vec<u8>;4]
 }
 

@@ -24,7 +24,7 @@ impl Direction
 pub struct Car
 {
     pub id : u8,
-    wait_time : usize,
+    pub wait_time : usize,
     pub intention : Direction,
     pub at_intersection:bool
 }
@@ -72,7 +72,7 @@ impl Car
         
     }
 
-    fn can_go(&self, lights : &[TrafficLight;4], main_light_index : usize) -> bool
+    pub fn can_go(&self, lights : &[TrafficLight;4], main_light_index : usize) -> bool
     {
         let forward_light = &lights[main_light_index];
         let left_light = &lights[(main_light_index-1)%4];
