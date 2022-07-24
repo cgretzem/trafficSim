@@ -2,6 +2,18 @@ use crate::traffic_logic::car::Direction;
 
 use std::collections::HashMap;
 
+#[derive(Clone, Copy)]
+pub struct Node{
+    dest_int_id:u8,
+    dist_from_source:u8,
+    direction:u8
+}
+
+impl Node{
+    pub fn new(dest_int_id:u8, dist_from_source:u8, direction:u8) -> Node{
+        Node{dest_int_id, dist_from_source, direction}
+    }
+}
 
 
 pub struct Road
@@ -12,7 +24,7 @@ pub struct Road
     /// * `Destination Intersection ID` : The ID of the intersection
     /// * `Distance from Source` : The number of ticks it takes to get to the destination from the source
     /// * `Direction` : The direction North South East West corresponding to 0,1,2,3 that car will arrive at
-    road : HashMap<u8, [(u8, u8, u8);4]> 
+    pub road : HashMap<u8, [Node;4]> 
 
 }
 
@@ -31,7 +43,7 @@ impl Road
     {
         let distance = self.road.get(&source)?
         .iter()
-        .find(|tup| tup.0 == dest).unwrap().1;
+        .find(|tup| tup.dest_int_id == dest).unwrap().dist_from_source;
         Some(distance)
     }
 
@@ -53,7 +65,7 @@ impl Road
             Direction::Right => usize::from(source_dir-1)%4
         };
         let next = self.road.get(&source)?[index];
-        Some((next.0, next.2))
+        Some((next.dest_int_id, next.direction))
 
     }
 }

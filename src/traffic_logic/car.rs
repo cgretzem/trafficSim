@@ -54,20 +54,20 @@ impl Car
 
     pub fn new(id : u8) -> Car
     {
-        Car { id, wait_time: 0, intention: Direction::Straight, at_intersection: false }
+        Car { id, wait_time: 0, intention: Direction::Straight, at_intersection: true }
     }
 
-    pub fn notify(&mut self, main_light_index : usize, lights : &[TrafficLight;4]) -> Option<Direction>
+    pub fn notify(&mut self, main_light_index : usize, lights : &[TrafficLight;4]) -> bool
     {
         
         if self.can_go(lights, main_light_index) == true
         {
             self.at_intersection = false;
-            Some(self.intention)
+            true
         }
         else {
             self.wait_time += 1;
-            None
+            false
         }
         
     }
@@ -75,13 +75,11 @@ impl Car
     pub fn can_go(&self, lights : &[TrafficLight;4], main_light_index : usize) -> bool
     {
         let forward_light = &lights[main_light_index];
-        let left_light = &lights[(main_light_index-1)%4];
-        let right_light = &lights[(main_light_index +1)%4];
-
+        println!("{:?}", forward_light);
         match self.intention
         {
             Direction::Left =>{
-                if let LightStatus::Green = left_light.left_turn_status {true} else {false}
+                if let LightStatus::Green = forward_light.left_turn_status {true} else {false}
             },
             
             Direction::Straight | Direction::Right => {
