@@ -3,7 +3,7 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-use std::{hash::Hash, fmt::Display};
+use std::{hash::Hash, fmt::Display, collections::VecDeque};
 
 
 
@@ -60,7 +60,7 @@ pub struct Intersection
 {
     pub id : u8,
     pub lights: [TrafficLight; 4],
-    pub light_queues : [Vec<u8>;4]
+    pub light_queues : [VecDeque<u8>;4]
 }
 
 impl Eq for Intersection {}
@@ -86,11 +86,11 @@ impl Hash for Intersection
 impl Intersection
 {
     pub fn new(id: u8) -> Intersection{
-        Intersection{id, lights: [TrafficLight::rand();4], light_queues:[Vec::new(), Vec::new(), Vec::new(), Vec::new()]}
+        Intersection{id, lights: [TrafficLight::rand();4], light_queues:[VecDeque::new(), VecDeque::new(), VecDeque::new(), VecDeque::new()]}
     }
 
     pub fn add_car_to_queue(&mut self, car_id:u8, dir:u8){
-        self.light_queues[usize::from(dir)].push(car_id);
+        self.light_queues[usize::from(dir)].push_back(car_id);
     }
 
     pub fn get_lights(&self, direction : u8) -> TrafficLight{

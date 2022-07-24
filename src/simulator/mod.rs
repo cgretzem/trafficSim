@@ -1,7 +1,7 @@
 
 use crate::traffic_logic::{road::{Road, Node}, car::{Car, Direction}, intersection::{Intersection, TrafficLight}};
 use std::{collections::HashMap};
-#[allow(dead_code)]
+
 #[derive(Clone, Copy)]
 pub struct Between
 {
@@ -68,7 +68,7 @@ pub struct Simulator
     next_car_id : u8
 
 }
-
+#[allow(dead_code)]
 impl Simulator
 {
     pub fn new() -> Simulator
@@ -116,7 +116,7 @@ impl Simulator
     {
         for _ in 0..ticks{
             self.play_timestep();
-            println!("\nTimestep {}\n------------------------", self.timestep);
+            println!("\nTimestep {}\n------------------------", self.timestep+1);
             self.car_positions.iter().for_each(|(car_id,pos)|{
                 println!("Car : {}",car_id);
                 match pos.current_intersection{
@@ -171,19 +171,38 @@ impl Simulator
                 let intersection_id = current.int_id;
                 let direction = current.direction;
                 if !car.at_intersection{ //car is at intersection but not in list, means it must drive 
-                    let next_intersection = self.road.get_next_intersection(intersection_id, direction, car.intention.clone()).unwrap();
-                    if next_intersection.0 != 0{ // if car is not at dead end
-                       
-                    
-                    let new_in_between = Between{
-                                                    int_1_id: intersection_id,
-                                                    int_2_id: next_intersection.0,
-                                                    distance_to_target: self.road.get_distance(intersection_id, next_intersection.0).unwrap()-1,
-                                                    from: Direction::get_next_direction(direction, car.intention)};
-                    car_pos.in_between = Some( new_in_between );
-                    car_pos.current_intersection = None;
-                    car.at_intersection = false;
+                    let next_intersection_opt = self.road.get_next_intersection(intersection_id, direction, car.intention.clone());
+                    match next_intersection_opt{
+                        Some(next_intersection) => {
+                            let new_in_between = Between{
+                                                            int_1_id: intersection_id,
+                                                            int_2_id: next_intersection.0,
+                                                            distance_to_target: self.road.get_distance(intersection_id, next_intersection.0).unwrap()-1,
+                                                            from: Direction::get_next_direction(direction, car.intention)};
+                            car_pos.in_between = Some( new_in_between );
+                            car_pos.current_intersection = None;
+                            car.at_intersection = false;
+                                
+                        },
+                        None => {
+                            while let None = self.road.get_next_intersection(intersection_id, direction, car.intention){
+                                car.randomize_intent();
+                            }
+                            let next_intersection = self.road.get_next_intersection(intersection_id, direction, car.intention.clone()).expect("Should never get here");
+                            let new_in_between = Between{
+                                                            int_1_id: intersection_id,
+                                                            int_2_id: next_intersection.0,
+                                                            distance_to_target: self.road.get_distance(intersection_id, next_intersection.0).unwrap()-1,
+                                                            from: Direction::get_next_direction(direction, car.intention)};
+                            car_pos.in_between = Some( new_in_between );
+                            car_pos.current_intersection = None;
+                            car.at_intersection = false;
+                                    
+                            
+
+                        }
                     }
+                    
                 }
             }
             else {
@@ -197,18 +216,50 @@ impl Simulator
                         panic!("Could not find intersection with id {}", in_between.int_2_id)
                     });
                     if car.can_go(&intersection.lights, usize::from(in_between.from+2)%4) {//lights at target intersection are green
-                        let next_intersection = self.road.get_next_intersection(intersection.id, in_between.from+2, car.intention.clone()).unwrap();
-                        if next_intersection.0 != 0{ // if car is not at dead end
+                        // let next_intersection = self.road.get_next_intersection(intersection.id, in_between.from+2, car.intention.clone()).unwrap();
+                        // if next_intersection.0 != 0{ // if car is not at dead end
                         
                         
-                        let new_in_between = Between{
-                                                        int_1_id: intersection.id,
-                                                        int_2_id: next_intersection.0,
-                                                        distance_to_target: self.road.get_distance(intersection.id, next_intersection.0).unwrap(),
-                                                        from: Direction::get_next_direction(in_between.from, car.intention)};
-                        car_pos.in_between = Some( new_in_between );
-                        car_pos.current_intersection = None;
-                        car.at_intersection = false;
+                        // let new_in_between = Between{
+                        //                                 int_1_id: intersection.id,
+                        //                                 int_2_id: next_intersection.0,
+                        //                                 distance_to_target: self.road.get_distance(intersection.id, next_intersection.0).unwrap(),
+                        //                                 from: Direction::get_next_direction(in_between.from, car.intention)};
+                        // car_pos.in_between = Some( new_in_between );
+                        // car_pos.current_intersection = None;
+                        // car.at_intersection = false;
+                        // }
+                        let direction = (in_between.from+2)%4;
+                        let next_intersection_opt = self.road.get_next_intersection(intersection.id, direction, car.intention.clone());
+                        match next_intersection_opt{
+                            Some(next_intersection) => {
+                                let new_in_between = Between{
+                                                                int_1_id: intersection.id,
+                                                                int_2_id: next_intersection.0,
+                                                                distance_to_target: self.road.get_distance(intersection.id, next_intersection.0).unwrap()-1,
+                                                                from: Direction::get_next_direction(direction, car.intention)};
+                                car_pos.in_between = Some( new_in_between );
+                                car_pos.current_intersection = None;
+                                car.at_intersection = false;
+                                    
+                            },
+                            None => {
+                                while let None = self.road.get_next_intersection(intersection.id, direction, car.intention){
+                                    car.randomize_intent();
+                                }
+                                let next_intersection = self.road.get_next_intersection(intersection.id, direction, car.intention.clone()).expect("Should never get here");
+                                let new_in_between = Between{
+                                                                int_1_id: intersection.id,
+                                                                int_2_id: next_intersection.0,
+                                                                distance_to_target: self.road.get_distance(intersection.id, next_intersection.0).unwrap()-1,
+                                                                from: Direction::get_next_direction(direction, car.intention)};
+                                car_pos.in_between = Some( new_in_between );
+                                car_pos.current_intersection = None;
+                                car.at_intersection = false;
+                                        
+                                
+
+                            }
                         }
                         return;
                     }
@@ -221,6 +272,7 @@ impl Simulator
                     .add_car_to_queue(car.id, new_curr.direction);
                     
                     car_pos.in_between = None;
+                    car.randomize_intent();
                     car.at_intersection = true;
                     
                 }
@@ -245,38 +297,35 @@ impl Simulator
             //println!("{:?}", intersection);
             intersection.light_queues.iter_mut()
             .for_each(|q| {
-                q.iter().for_each(|x| {
-                    ids_to_notify.push((*x, (i+2)%4, intersection.id))
-                });
+                match q.pop_front(){
+                    None => (),
+                    Some(c_id) => {ids_to_notify.push((c_id, (i+2)%4, intersection.id))}
+                }
+                
                     i+=1;
             });
             intersection.lights = *new;
 
         }
         //notify the cars and remove from list
+        println!("{:?}", ids_to_notify);
         ids_to_notify.iter().for_each(|(car_id, main_light_index, intersection_id)|{
             let changed = self.get_car_mut(*car_id).unwrap().notify(usize::from(*main_light_index), new_lights.get(intersection_id).unwrap());
-            self.get_intersection_mut(*intersection_id).unwrap().light_queues.iter_mut().for_each(|vec|{
-                vec.retain(|c_id|{
-                    if changed{
-                        *c_id != *car_id
-                    }
-                    else{
-                        true
-                    }
-                    
-                })
-            });
+            if !changed{
+                self.get_intersection_mut(*intersection_id).unwrap().light_queues[usize::from(main_light_index+2)%4].push_front(*car_id);
+            }
         })
 
 
     }
 
+    
+
     fn get_car_mut(&mut self, id:u8) -> Option<&mut Car>
     {
         self.cars.iter_mut().find(|car| car.id == id)
     }
-
+    
     fn get_car(&self, id:u8) -> Option<&Car>{
         self.cars.iter().find(|car| car.id==id)
     }
