@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 #[derive(Clone, Copy)]
 pub struct Node{
-    dest_int_id:u8,
-    dist_from_source:u8,
-    direction:u8
+    pub dest_int_id:u8,
+    pub dist_from_source:u8,
+    pub direction:u8
 }
 
 impl Node{
@@ -24,7 +24,7 @@ pub struct Road
     /// * `Destination Intersection ID` : The ID of the intersection
     /// * `Distance from Source` : The number of ticks it takes to get to the destination from the source
     /// * `Direction` : The direction North South East West corresponding to 0,1,2,3 that car will arrive at
-    pub road : HashMap<u8, [Node;4]> 
+    pub road : HashMap<u8, [Option<Node>;4]> 
 
 }
 
@@ -43,7 +43,12 @@ impl Road
     {
         let distance = self.road.get(&source)?
         .iter()
-        .find(|tup| tup.dest_int_id == dest).unwrap().dist_from_source;
+        .find(|opt| {
+            match opt{
+                None => false,
+                Some(tup) => tup.dest_int_id == dest
+            }
+        }).unwrap_or_else(|| panic!("Intersection {} has no connection to Intersection {}", source, dest)).unwrap().dist_from_source;
         Some(distance)
     }
 
@@ -64,7 +69,7 @@ impl Road
             Direction::Left => usize::from(source_dir+1)%4,
             Direction::Right => usize::from(source_dir-1)%4
         };
-        let next = self.road.get(&source)?[index];
+        let next = self.road.get(&source)?[index].unwrap_or_else(||panic!("There is no intersection from intersection {} in direction {}", source, index));
         Some((next.dest_int_id, next.direction))
 
     }

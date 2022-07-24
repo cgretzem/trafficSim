@@ -1,0 +1,5 @@
+* Create rules to make sure no collisons occur
+* Test larger scale map
+* Test multiple cars
+* Add documentation
+* Add U-Turn functionality

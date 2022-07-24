@@ -1,5 +1,5 @@
 
-use crate::traffic_logic::{road::Road, car::{Car, Direction}, intersection::{Intersection, TrafficLight}};
+use crate::traffic_logic::{road::{Road, Node}, car::{Car, Direction}, intersection::{Intersection, TrafficLight}};
 use std::{collections::HashMap};
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
@@ -71,14 +71,44 @@ pub struct Simulator
 
 impl Simulator
 {
-    pub fn new(road:Road) -> Simulator
+    pub fn new() -> Simulator
     {
-        let mut intersections:Vec<Intersection> = Vec::new();
-        road.road.iter().for_each(|(int_id, lights)|{
-            let new_intersection = Intersection::new(*int_id);
-            intersections.push(new_intersection);
-        });
-        Simulator{road, car_positions: HashMap::new(), timestep:0, cars:Vec::new(), intersections, next_car_id: 0, next_int_id:0}
+        let intersections:Vec<Intersection> = Vec::new();
+        Simulator{road:Road::new(), car_positions: HashMap::new(), timestep:0, cars:Vec::new(), intersections, next_car_id: 0, next_int_id:1}
+    }
+
+    pub fn add_intersection(&mut self){
+        let intersection = Intersection::new(self.next_int_id);
+        self.intersections.push(intersection);
+        self.next_int_id += 1;
+    }
+
+    pub fn add_intersections(&mut self, num:u8){
+        for _ in 0..num.into(){
+            self.add_intersection();
+        }
+    }
+
+    pub fn add_road(&mut self, int_1: u8, direction: u8, int_2: u8, distance:u8){
+        let len = self.intersections.len();
+        if len < int_1.into() || len < int_2.into(){
+            println!("{}", len);
+            panic!("Cannot add a connection to an intersection that does not exist");
+        }
+        let road = &mut self.road.road;
+        let ent = &mut road.entry(int_1).or_insert([None, None, None, None])[usize::from(direction)];
+        if let Some(entry) = ent{
+            panic!("Intersection {} is already connected to Intersection {} in direction {}", int_1, entry.dest_int_id, direction);
+        }
+        
+        *ent = Some(Node::new(int_2, distance, direction));
+        let new_dir = usize::from(direction+2)%4;
+        let ent = &mut road.entry(int_2).or_insert([None, None, None, None])[new_dir];
+        if let Some(entry) = ent{
+            panic!("Intersection {} is already connected to Intersection {} in direction {}", int_2, entry.dest_int_id, new_dir);
+        }
+        *ent = Some(Node::new(int_1, distance, new_dir.try_into().unwrap()));
+
     }
 
 
@@ -160,8 +190,12 @@ impl Simulator
                 let mut in_between = car_pos.in_between.unwrap();
                 if in_between.distance_to_target == 1
                 {
+                    
                     let intersection = self.intersections.iter_mut()
-                    .find(|int| int.id == in_between.int_2_id).unwrap();
+                    .find(|int| int.id == in_between.int_2_id).unwrap_or_else(||{
+                        
+                        panic!("Could not find intersection with id {}", in_between.int_2_id)
+                    });
                     if car.can_go(&intersection.lights, usize::from(in_between.from+2)%4) {//lights at target intersection are green
                         let next_intersection = self.road.get_next_intersection(intersection.id, in_between.from+2, car.intention.clone()).unwrap();
                         if next_intersection.0 != 0{ // if car is not at dead end

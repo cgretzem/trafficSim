@@ -5,7 +5,6 @@ use rand::{
 };
 use std::{hash::Hash, fmt::Display};
 
-use super::car::Direction;
 
 
 
