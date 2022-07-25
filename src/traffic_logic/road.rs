@@ -67,7 +67,7 @@ impl Road
         {
             Direction::Straight => usize::from(source_dir+2)%4,
             Direction::Left => usize::from(source_dir+1)%4,
-            Direction::Right => usize::from(source_dir-1)%4,
+            Direction::Right => usize::from(source_dir+3)%4,
             _=> usize::from(source_dir)
         };
         let next = self.road.get(&source)?[index]?;

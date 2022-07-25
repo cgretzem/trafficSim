@@ -1,5 +1,7 @@
-* Create rules to make sure no collisons occur
+* Create rules to make sure no collisons occur [+]
 * Test larger scale map
 * Test multiple cars
 * Add documentation
-* Add U-Turn functionality
+* Add U-Turn functionality [+]
+* Create road builder
+* Create simulation visualization 

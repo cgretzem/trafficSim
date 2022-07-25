@@ -12,7 +12,10 @@ fn main() {
 
     simulator.add_car(Position::new(Some(Current{int_id:1, direction:1}),None));
     simulator.add_car(Position::new(Some(Current{int_id:1, direction:1}),None));
-
-    simulator.run(10);
+    use std::time::Instant;
+    let now = Instant::now();
+    simulator.run(10000);
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 
 }

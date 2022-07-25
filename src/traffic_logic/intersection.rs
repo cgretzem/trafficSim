@@ -28,6 +28,74 @@ impl Display for LightStatus{
         write!(f,"{}", output)
     }
 }
+#[derive(Clone, Copy)]
+pub enum LightConfig{
+    NorthSouth,
+    EastWest,
+    NorthSouthTurns,
+    EastWestTurns,
+    NorthLeft,
+    SouthLeft,
+    EastLeft,
+    WestLeft,
+
+}
+
+impl LightConfig{
+    pub fn get_lights(&self) -> [TrafficLight;4]{
+        use LightStatus::Green;
+        use LightStatus::Red;
+        let north = 0;
+        let east = 1;
+        let south = 2;
+        let west = 3;
+        let mut lights = [TrafficLight{main_status:Red, left_turn_status:Red};4];
+        match self{
+            Self::NorthSouth => {
+                lights[north].main_status = Green;
+                lights[south].main_status = Green;
+
+            },
+
+            Self::EastWest => {
+                lights[east].main_status = Green;
+                lights[west].main_status = Green;
+            },
+
+            Self::EastWestTurns => {
+                lights[east].left_turn_status = Green;
+                lights[west].left_turn_status = Green;
+            },
+
+            Self::NorthSouthTurns => {
+                lights[north].left_turn_status = Green;
+                lights[south].left_turn_status = Green;
+            },
+
+            Self::EastLeft =>{
+                lights[east].left_turn_status = Green;
+                lights[east].main_status = Green;
+            },
+
+            Self::WestLeft =>{
+                lights[west].left_turn_status = Green;
+                lights[west].main_status = Green;
+            },
+
+            Self::SouthLeft =>{
+                lights[south].left_turn_status = Green;
+                lights[south].main_status = Green;
+            },
+
+            Self::NorthLeft =>{
+                lights[north].left_turn_status = Green;
+                lights[north].main_status = Green;
+            }
+        };
+        lights
+        
+    }
+}
 
 impl Distribution<LightStatus> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> LightStatus {
@@ -36,6 +104,22 @@ impl Distribution<LightStatus> for Standard {
             0 => LightStatus::Green,
             1 => LightStatus::Yellow,
             _ => LightStatus::Red,
+        }
+    }
+}
+
+impl Distribution<LightConfig> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> LightConfig {
+        // match rng.gen_range(0, 3) { // rand 0.5, 0.6, 0.7
+        match rng.gen_range(0..=7) { // rand 0.8
+            0 => LightConfig::NorthSouth,
+            1 => LightConfig::EastWest,
+            2 => LightConfig::EastWestTurns,
+            3 => LightConfig::NorthSouthTurns,
+            4 => LightConfig::EastLeft,
+            5 => LightConfig::WestLeft,
+            6 => LightConfig::NorthLeft,
+            _ => LightConfig::SouthLeft,
         }
     }
 }
@@ -54,6 +138,7 @@ impl TrafficLight{
         TrafficLight { main_status: rand::random(), left_turn_status: rand::random() }
     }
 }
+
 
 #[derive(Debug)]
 pub struct Intersection
@@ -96,4 +181,6 @@ impl Intersection
     pub fn get_lights(&self, direction : u8) -> TrafficLight{
         self.lights[usize::from(direction)]
     } 
+
+
 }

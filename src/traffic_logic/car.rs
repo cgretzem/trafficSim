@@ -52,7 +52,7 @@ impl Direction
     {
         match intent{
             Self::Left => (source+1)%4,
-            Self::Right => (source-1)%4,
+            Self::Right => (source+3)%4,
             Self::Straight => (source+2)%4,
             _ => source
         }
@@ -118,7 +118,7 @@ impl Car
     pub fn can_go(&self, lights : &[TrafficLight;4], main_light_index : usize) -> bool
     {
         let forward_light = &lights[main_light_index];
-        println!("{:?}", forward_light);
+        //println!("{:?}", forward_light);
         match self.intention
         {
             Direction::Left =>{

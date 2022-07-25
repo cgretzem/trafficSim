@@ -1,5 +1,5 @@
 
-use crate::traffic_logic::{road::{Road, Node}, car::{Car, Direction}, intersection::{Intersection, TrafficLight}};
+use crate::traffic_logic::{road::{Road, Node}, car::{Car, Direction}, intersection::{Intersection, TrafficLight, LightConfig}};
 use std::{collections::HashMap};
 
 #[derive(Clone, Copy)]
@@ -116,25 +116,25 @@ impl Simulator
     {
         for _ in 0..ticks{
             self.play_timestep();
-            println!("\nTimestep {}\n------------------------", self.timestep+1);
-            self.car_positions.iter().for_each(|(car_id,pos)|{
-                println!("Car : {}",car_id);
-                match pos.current_intersection{
+            //println!("\nTimestep {}\n------------------------", self.timestep+1);
+            // self.car_positions.iter().for_each(|(car_id,pos)|{
+            //     println!("Car : {}",car_id);
+            //     match pos.current_intersection{
 
-                    None => {
-                        let in_between = pos.in_between.unwrap();
-                        println!("Is {}/{} remaining between Intersection {} and Intersection {}",
-                        in_between.distance_to_target,
-                        Road::get_distance(&self.road, in_between.int_1_id, in_between.int_2_id).unwrap(),
-                        in_between.int_1_id, in_between.int_2_id);
-                    },
-                    Some(current) => {
-                        println!("Is at intersection {} waiting at direction {}", current.int_id, current.direction);
-                        let intersec = self.get_intersection(current.int_id).unwrap_or_else(|| panic!("No intersection found with ID {}", current.int_id)).lights;
-                        println!("Intersection lights for car waiting in direction {}: \nLeft Turn: {}\nMain: {}", current.direction, intersec[(usize::from(current.direction+2))%4].left_turn_status, intersec[(usize::from(current.direction+2))%4].left_turn_status)
-                    }
-                };
-            });
+            //         None => {
+            //             let in_between = pos.in_between.unwrap();
+            //             println!("Is {}/{} remaining between Intersection {} and Intersection {}",
+            //             in_between.distance_to_target,
+            //             Road::get_distance(&self.road, in_between.int_1_id, in_between.int_2_id).unwrap(),
+            //             in_between.int_1_id, in_between.int_2_id);
+            //         },
+            //         Some(current) => {
+            //             println!("Is at intersection {} waiting at direction {}", current.int_id, current.direction);
+            //             let intersec = self.get_intersection(current.int_id).unwrap_or_else(|| panic!("No intersection found with ID {}", current.int_id)).lights;
+            //             println!("Intersection lights for car waiting in direction {}: \nLeft Turn: {}\nMain: {}", current.direction, intersec[(usize::from(current.direction+2))%4].left_turn_status, intersec[(usize::from(current.direction+2))%4].left_turn_status)
+            //         }
+            //     };
+            // });
             self.timestep +=1;
         }
         
@@ -156,7 +156,9 @@ impl Simulator
         let mut new_map: HashMap<u8, [TrafficLight;4]> = HashMap::new();
         self.intersections.iter().for_each(|intersection| {
             let id = intersection.id.clone();
-            let random_lights: [TrafficLight;4] = [TrafficLight::rand(), TrafficLight::rand(), TrafficLight::rand(), TrafficLight::rand()];
+            //let random_lights: [TrafficLight;4] = [TrafficLight::rand(), TrafficLight::rand(), TrafficLight::rand(), TrafficLight::rand()];
+            let config:LightConfig = rand::random();
+            let random_lights = config.get_lights();
             new_map.insert(id, random_lights);
         });
         new_map
@@ -216,19 +218,6 @@ impl Simulator
                         panic!("Could not find intersection with id {}", in_between.int_2_id)
                     });
                     if car.can_go(&intersection.lights, usize::from(in_between.from+2)%4) {//lights at target intersection are green
-                        // let next_intersection = self.road.get_next_intersection(intersection.id, in_between.from+2, car.intention.clone()).unwrap();
-                        // if next_intersection.0 != 0{ // if car is not at dead end
-                        
-                        
-                        // let new_in_between = Between{
-                        //                                 int_1_id: intersection.id,
-                        //                                 int_2_id: next_intersection.0,
-                        //                                 distance_to_target: self.road.get_distance(intersection.id, next_intersection.0).unwrap(),
-                        //                                 from: Direction::get_next_direction(in_between.from, car.intention)};
-                        // car_pos.in_between = Some( new_in_between );
-                        // car_pos.current_intersection = None;
-                        // car.at_intersection = false;
-                        // }
                         let direction = (in_between.from+2)%4;
                         let next_intersection_opt = self.road.get_next_intersection(intersection.id, direction, car.intention.clone());
                         match next_intersection_opt{
@@ -294,7 +283,7 @@ impl Simulator
             let intersection = self.intersections.iter_mut().find(|int_id|{
                 int_id.id == *id
             }).unwrap();
-            //println!("{:?}", intersection);
+
             intersection.light_queues.iter_mut()
             .for_each(|q| {
                 match q.pop_front(){
@@ -308,7 +297,7 @@ impl Simulator
 
         }
         //notify the cars and remove from list
-        println!("{:?}", ids_to_notify);
+        
         ids_to_notify.iter().for_each(|(car_id, main_light_index, intersection_id)|{
             let changed = self.get_car_mut(*car_id).unwrap().notify(usize::from(*main_light_index), new_lights.get(intersection_id).unwrap());
             if !changed{
